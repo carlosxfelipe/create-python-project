@@ -119,6 +119,36 @@ def ask_project_name() -> str:
             print("O nome do projeto não pode ser vazio.")
 
 
+def create_dev_python_file(project_path: str, project_type: str) -> None:
+    """
+    Cria o arquivo dev.py para facilitar a execução do projeto.
+    """
+    if project_type == "django":
+        command = "uv run python manage.py runserver"
+    elif project_type == "fastapi":
+        command = "uv run uvicorn main:app --reload"
+    else:
+        return
+
+    dev_file_content = f"""import subprocess
+import sys
+
+def main() -> None:
+    try:
+        subprocess.run("{command}", shell=True, check=True)
+    except subprocess.CalledProcessError as error:
+        sys.exit(error.returncode)
+
+if __name__ == "__main__":
+    main()
+"""
+
+    dev_file_path = os.path.join(project_path, "dev.py")
+
+    with open(dev_file_path, "w", encoding="utf-8") as file:
+        file.write(dev_file_content)
+
+
 def create_django_project(project_name: str) -> None:
     """
     Cria e executa um projeto Django usando uv.
@@ -129,6 +159,9 @@ def create_django_project(project_name: str) -> None:
     run_command("uv add django", cwd=project_name)
     run_command("uv run django-admin startproject config .", cwd=project_name)
     run_command("uv run python manage.py migrate", cwd=project_name)
+
+    # Cria o arquivo dev.py
+    create_dev_python_file(project_name, "django")
 
     print("\nProjeto Django criado com sucesso!")
     print("Iniciando servidor de desenvolvimento...\n")
@@ -165,6 +198,9 @@ def create_fastapi_project(project_name: str) -> None:
 
     # Cria automaticamente o main.py
     create_fastapi_main_file(project_name)
+
+    # Cria o arquivo dev.py
+    create_dev_python_file(project_name, "fastapi")
 
     print("\nProjeto FastAPI criado com sucesso!")
     print("Iniciando servidor de desenvolvimento...\n")
