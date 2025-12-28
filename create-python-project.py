@@ -93,12 +93,16 @@ def ask_project_type() -> str:
     """
     while True:
         print("\nQual tipo de projeto você deseja criar?")
+        print("0 - Sair")
         print("1 - Django")
         print("2 - FastAPI")
 
-        choice = input("Escolha uma opção (1 ou 2): ").strip()
+        choice = input("Escolha uma opção (0, 1 ou 2): ").strip()
 
-        if choice == "1":
+        if choice == "0":
+            print("Saindo...")
+            sys.exit(0)
+        elif choice == "1":
             return "django"
         elif choice == "2":
             return "fastapi"
