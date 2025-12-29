@@ -95,9 +95,10 @@ def ask_project_type() -> str:
         print("\nQual tipo de projeto você deseja criar?")
         print("0 - Sair")
         print("1 - Django")
-        print("2 - FastAPI")
+        print("2 - Django REST Framework")
+        print("3 - FastAPI")
 
-        choice = input("Escolha uma opção (0, 1 ou 2): ").strip()
+        choice = input("Escolha uma opção (0, 1, 2 ou 3): ").strip()
 
         if choice == "0":
             print("Saindo...")
@@ -105,6 +106,8 @@ def ask_project_type() -> str:
         elif choice == "1":
             return "django"
         elif choice == "2":
+            return "django_rest"
+        elif choice == "3":
             return "fastapi"
         else:
             print("Opção inválida. Tente novamente.")
@@ -127,7 +130,7 @@ def create_dev_python_file(project_path: str, project_type: str) -> None:
     """
     Cria o arquivo dev.py para facilitar a execução do projeto.
     """
-    if project_type == "django":
+    if project_type in ("django", "django_rest"):
         command = "uv run python manage.py runserver"
     elif project_type == "fastapi":
         command = "uv run uvicorn main:app --reload"
@@ -168,6 +171,70 @@ def create_django_project(project_name: str) -> None:
     create_dev_python_file(project_name, "django")
 
     print("\nProjeto Django criado com sucesso!")
+    print("Iniciando servidor de desenvolvimento...\n")
+
+    run_command("uv run python manage.py runserver", cwd=project_name)
+
+
+def create_django_rest_project(project_name: str) -> None:
+    """
+    Cria e executa um projeto Django REST Framework usando uv.
+    """
+    print(f"\nCriando projeto Django REST Framework: {project_name}")
+
+    run_command(f"uv init {project_name} --python 3.12")
+    run_command(
+        "uv add django djangorestframework psycopg2-binary "
+        "python-decouple django-cors-headers "
+        "dj-database-url drf-spectacular",
+        cwd=project_name,
+    )
+    run_command("uv run django-admin startproject config .", cwd=project_name)
+
+    settings_path = os.path.join(project_name, "config", "settings.py")
+
+    with open(settings_path, "r", encoding="utf-8") as file:
+        content = file.read()
+
+    apps_to_add = [
+        "rest_framework",
+        "corsheaders",
+        "drf_spectacular",
+    ]
+
+    for app in apps_to_add:
+        if app not in content:
+            content = content.replace(
+                "INSTALLED_APPS = [",
+                f"INSTALLED_APPS = [\n    '{app}',",
+            )
+
+    if "REST_FRAMEWORK" not in content:
+        content += """
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+"""
+
+    if "SPECTACULAR_SETTINGS" not in content:
+        content += f"""
+
+SPECTACULAR_SETTINGS = {{
+    "TITLE": "{project_name}",
+    "DESCRIPTION": "API documentation",
+    "VERSION": "1.0.0",
+}}
+"""
+
+    with open(settings_path, "w", encoding="utf-8") as file:
+        file.write(content)
+
+    run_command("uv run python manage.py migrate", cwd=project_name)
+
+    create_dev_python_file(project_name, "django_rest")
+
+    print("\nProjeto Django REST Framework criado com sucesso!")
     print("Iniciando servidor de desenvolvimento...\n")
 
     run_command("uv run python manage.py runserver", cwd=project_name)
@@ -231,6 +298,8 @@ def main() -> None:
 
     if project_type == "django":
         create_django_project(project_name)
+    elif project_type == "django_rest":
+        create_django_rest_project(project_name)
     elif project_type == "fastapi":
         create_fastapi_project(project_name)
 
