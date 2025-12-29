@@ -65,6 +65,17 @@ uv run dev.py
 
 Assim, o servidor de desenvolvimento será iniciado rapidamente.
 
+## Documentação automática (Swagger)
+
+Após iniciar o servidor de desenvolvimento, acesse a documentação interativa (Swagger UI):
+
+- **Django REST Framework:**
+  - Acesse: `http://localhost:8000/api/docs/`
+- **FastAPI:**
+  - Acesse: `http://localhost:8000/docs`
+
+Essas interfaces permitem explorar e testar os endpoints da API diretamente pelo navegador.
+
 ---
 
 Este utilitário automatiza a configuração inicial de projetos Django, Django REST Framework e FastAPI, tornando o processo mais ágil e padronizado.
