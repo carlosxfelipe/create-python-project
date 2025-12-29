@@ -191,6 +191,7 @@ def create_django_rest_project(project_name: str) -> None:
     )
     run_command("uv run django-admin startproject config .", cwd=project_name)
 
+    # ----- settings.py -----
     settings_path = os.path.join(project_name, "config", "settings.py")
 
     with open(settings_path, "r", encoding="utf-8") as file:
@@ -229,6 +230,43 @@ SPECTACULAR_SETTINGS = {{
 
     with open(settings_path, "w", encoding="utf-8") as file:
         file.write(content)
+
+    # ----- views.py (Hello World) -----
+    views_path = os.path.join(project_name, "config", "views.py")
+
+    with open(views_path, "w", encoding="utf-8") as file:
+        file.write(
+            """from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+
+@api_view(["GET"])
+def hello_world(request):
+    return Response({"Hello": "World"})
+"""
+        )
+
+    # ----- urls.py -----
+    urls_path = os.path.join(project_name, "config", "urls.py")
+
+    with open(urls_path, "w", encoding="utf-8") as file:
+        file.write(
+            """from django.contrib import admin
+from django.urls import path
+from config.views import hello_world
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+)
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("", hello_world),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema")),
+]
+"""
+        )
 
     run_command("uv run python manage.py migrate", cwd=project_name)
 
